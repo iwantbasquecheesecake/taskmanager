@@ -263,16 +263,16 @@ class AppUI {
         ${this.viewMode === 'dashboard' ? `
           ${activeRoleId === 'all' ? `
             <div style="display: flex; flex-direction: column; gap: 16px;">
-              <!-- Urgent Tasks Top Bar -->
+              <!-- Overall Tasks Top Section -->
               <section class="column-card" style="border-top: 3.5px solid var(--accent-warm-earth);">
                 <div class="column-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
                   <div class="column-title">
                     <div class="column-icon icon-dday" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth);">
-                      <i data-lucide="flame" style="width: 16px; height: 16px;"></i>
+                      <i data-lucide="list-todo" style="width: 16px; height: 16px;"></i>
                     </div>
                     <div>
-                      <h2 style="font-size: 1.05rem;">🔥 마감 임박 태스크</h2>
-                      <span style="font-size: 0.72rem; color: var(--text-muted);">카테고리 구분 없이 날짜 임박순 정렬</span>
+                      <h2 style="font-size: 1.05rem;">태스크</h2>
+                      <span style="font-size: 0.72rem; color: var(--text-muted);">카테고리 구분 없이 마감 임박순 정렬</span>
                     </div>
                   </div>
                   <span class="item-count" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth);">
@@ -280,10 +280,10 @@ class AppUI {
                   </span>
                 </div>
 
-                <div class="urgent-task-scroll-container" style="display: flex; gap: 10px; overflow-x: auto; padding: 6px 2px; scrollbar-width: thin;">
+                <div class="item-list" style="max-height: 280px; overflow-y: auto;">
                   ${sortedUpcomingTasks.filter(i => !i.completed).length === 0 ? `
-                    <div class="empty-state" style="padding: 18px; width: 100%;">
-                      <p style="font-size: 0.85rem; color: var(--text-muted);">남은 미완료 할 일이 없습니다! 🎉</p>
+                    <div class="empty-state" style="padding: 20px 10px;">
+                      <p style="font-size: 0.85rem; color: var(--text-muted);">남은 미완료 태스크가 없습니다! 🎉</p>
                     </div>
                   ` : sortedUpcomingTasks.filter(i => !i.completed).map(item => {
                     const role = getRole(roles, item.roleId);
@@ -313,32 +313,25 @@ class AppUI {
                     }
 
                     return `
-                      <div 
-                        class="urgent-task-card" 
-                        data-detail-id="${item.id}"
-                        style="min-width: 230px; max-width: 260px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: transform 0.2s ease, border-color 0.2s ease;"
-                      >
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
-                          <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; font-size: 0.72rem; padding: 2px 7px;">
-                            ${role.name}
-                          </span>
-                          <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap;">
-                            ${ddayText}
-                          </span>
-                        </div>
-                        
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                          <div class="task-checkbox" data-toggle-id="${item.id}"></div>
-                          <span class="task-title" style="font-size: 0.88rem; font-weight: 600; color: var(--text-main); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
-                            ${this.escapeHtml(item.title)}
-                          </span>
-                        </div>
-
-                        ${item.memo ? `
-                          <div style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.03); padding: 4px 8px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            📝 ${this.escapeHtml(item.memo)}
+                      <div class="task-item" data-detail-id="${item.id}" style="cursor: pointer;">
+                        <div class="task-checkbox" data-toggle-id="${item.id}"></div>
+                        <div class="task-content">
+                          <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
+                            <span class="task-title" style="font-size: 0.9rem;">${this.escapeHtml(item.title)}</span>
+                            <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap;">
+                              ${ddayText}
+                            </span>
                           </div>
-                        ` : ''}
+                          <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                            <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; font-size: 0.72rem;">
+                              ${role.name}
+                            </span>
+                            ${item.memo ? '<span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
+                          </div>
+                        </div>
+                        <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
+                          <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                        </button>
                       </div>
                     `;
                   }).join('')}
