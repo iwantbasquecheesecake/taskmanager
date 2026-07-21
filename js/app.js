@@ -262,60 +262,144 @@ class AppUI {
         <!-- Main Content View Switch -->
         ${this.viewMode === 'dashboard' ? `
           ${activeRoleId === 'all' ? `
-            <!-- Overall View: Grid of All Categories -->
-            <main class="dashboard-grid">
-              ${roles.filter(r => r.id !== 'all').map(role => {
-                const roleItems = filteredItems.filter(item => item.roleId === role.id);
-                const pendingItems = roleItems.filter(i => !i.completed);
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Urgent Tasks Top Bar -->
+              <section class="column-card" style="border-top: 3.5px solid var(--accent-warm-earth);">
+                <div class="column-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                  <div class="column-title">
+                    <div class="column-icon icon-dday" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth);">
+                      <i data-lucide="flame" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    <div>
+                      <h2 style="font-size: 1.05rem;">🔥 마감 임박 태스크</h2>
+                      <span style="font-size: 0.72rem; color: var(--text-muted);">카테고리 구분 없이 날짜 임박순 정렬</span>
+                    </div>
+                  </div>
+                  <span class="item-count" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth);">
+                    ${sortedUpcomingTasks.filter(i => !i.completed).length}개 남음
+                  </span>
+                </div>
 
-                return `
-                  <section class="column-card" style="border-top: 3.5px solid ${role.color};">
-                    <div class="column-header">
-                      <div class="column-title">
-                        <span class="role-tag" style="background: ${role.color}18; color: ${role.color}; font-size: 0.95rem; padding: 4px 10px; font-weight: 700;">
-                          ${role.name}
+                <div class="urgent-task-scroll-container" style="display: flex; gap: 10px; overflow-x: auto; padding: 6px 2px; scrollbar-width: thin;">
+                  ${sortedUpcomingTasks.filter(i => !i.completed).length === 0 ? `
+                    <div class="empty-state" style="padding: 18px; width: 100%;">
+                      <p style="font-size: 0.85rem; color: var(--text-muted);">남은 미완료 할 일이 없습니다! 🎉</p>
+                    </div>
+                  ` : sortedUpcomingTasks.filter(i => !i.completed).map(item => {
+                    const role = getRole(roles, item.roleId);
+                    const diffDays = getDiffDaysFromSelected(item.dueDate, this.selectedDateISO);
+                    let ddayText = '';
+                    let badgeBg = 'rgba(45, 90, 39, 0.1)';
+                    let badgeColor = 'var(--accent-forest)';
+
+                    if (diffDays === 999) {
+                      ddayText = '📅 상시';
+                      badgeBg = 'rgba(0, 0, 0, 0.05)';
+                      badgeColor = 'var(--text-muted)';
+                    } else if (diffDays === 0) {
+                      ddayText = '🔥 오늘 마감!';
+                      badgeBg = 'rgba(224, 122, 95, 0.2)';
+                      badgeColor = 'var(--accent-warm-earth)';
+                    } else if (diffDays > 0) {
+                      ddayText = `D-${diffDays} (${formatDate(item.dueDate)})`;
+                      if (diffDays <= 3) {
+                        badgeBg = 'rgba(224, 122, 95, 0.15)';
+                        badgeColor = 'var(--accent-warm-earth)';
+                      }
+                    } else {
+                      ddayText = `D+${Math.abs(diffDays)} (${formatDate(item.dueDate)})`;
+                      badgeBg = 'rgba(0,0,0,0.06)';
+                      badgeColor = 'var(--text-dim)';
+                    }
+
+                    return `
+                      <div 
+                        class="urgent-task-card" 
+                        data-detail-id="${item.id}"
+                        style="min-width: 230px; max-width: 260px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: transform 0.2s ease, border-color 0.2s ease;"
+                      >
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
+                          <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; font-size: 0.72rem; padding: 2px 7px;">
+                            ${role.name}
+                          </span>
+                          <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap;">
+                            ${ddayText}
+                          </span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <div class="task-checkbox" data-toggle-id="${item.id}"></div>
+                          <span class="task-title" style="font-size: 0.88rem; font-weight: 600; color: var(--text-main); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                            ${this.escapeHtml(item.title)}
+                          </span>
+                        </div>
+
+                        ${item.memo ? `
+                          <div style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.03); padding: 4px 8px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            📝 ${this.escapeHtml(item.memo)}
+                          </div>
+                        ` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </section>
+
+              <!-- Overall View: Grid of All Categories -->
+              <main class="dashboard-grid">
+                ${roles.filter(r => r.id !== 'all').map(role => {
+                  const roleItems = filteredItems.filter(item => item.roleId === role.id);
+                  const pendingItems = roleItems.filter(i => !i.completed);
+
+                  return `
+                    <section class="column-card" style="border-top: 3.5px solid ${role.color};">
+                      <div class="column-header">
+                        <div class="column-title">
+                          <span class="role-tag" style="background: ${role.color}18; color: ${role.color}; font-size: 0.95rem; padding: 4px 10px; font-weight: 700;">
+                            ${role.name}
+                          </span>
+                        </div>
+                        <span class="item-count" style="background: ${role.color}15; color: ${role.color};">
+                          ${pendingItems.length}개 남음
                         </span>
                       </div>
-                      <span class="item-count" style="background: ${role.color}15; color: ${role.color};">
-                        ${pendingItems.length}개 남음
-                      </span>
-                    </div>
 
-                    <div class="item-list">
-                      ${roleItems.length === 0 ? `
-                        <div class="empty-state" style="padding: 28px 10px;">
-                          <i data-lucide="check-circle-2" style="width: 28px; height: 28px; opacity: 0.35;"></i>
-                          <p style="font-size: 0.82rem;">등록된 할 일이 없습니다.</p>
-                        </div>
-                      ` : roleItems.map(item => {
-                        const ddayStr = item.dueDate ? getDDayString(item.dueDate) : '';
-                        return `
-                          <div class="task-item ${item.completed ? 'completed' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
-                            <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
-                              ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
-                            </div>
-                            <div class="task-content">
-                              <span class="task-title" style="font-size: 0.88rem;">${this.escapeHtml(item.title)}</span>
-                              <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
-                                ${item.dueDate ? `
-                                  <span style="font-size: 0.72rem; font-weight: 600; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 6px; border-radius: 4px;">
-                                    ${ddayStr} (${formatDate(item.dueDate)})
-                                  </span>
-                                ` : ''}
-                                ${item.memo ? '<span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
-                              </div>
-                            </div>
-                            <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
-                              <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
-                            </button>
+                      <div class="item-list">
+                        ${roleItems.length === 0 ? `
+                          <div class="empty-state" style="padding: 28px 10px;">
+                            <i data-lucide="check-circle-2" style="width: 28px; height: 28px; opacity: 0.35;"></i>
+                            <p style="font-size: 0.82rem;">등록된 할 일이 없습니다.</p>
                           </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  </section>
-                `;
-              }).join('')}
-            </main>
+                        ` : roleItems.map(item => {
+                          const ddayStr = item.dueDate ? getDDayString(item.dueDate) : '';
+                          return `
+                            <div class="task-item ${item.completed ? 'completed' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
+                              <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
+                                ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
+                              </div>
+                              <div class="task-content">
+                                <span class="task-title" style="font-size: 0.88rem;">${this.escapeHtml(item.title)}</span>
+                                <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                                  ${item.dueDate ? `
+                                    <span style="font-size: 0.72rem; font-weight: 600; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 6px; border-radius: 4px;">
+                                      ${ddayStr} (${formatDate(item.dueDate)})
+                                    </span>
+                                  ` : ''}
+                                  ${item.memo ? '<span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
+                                </div>
+                              </div>
+                              <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
+                                <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                              </button>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </section>
+                  `;
+                }).join('')}
+              </main>
+            </div>
           ` : `
             <!-- Single Category Focused View -->
             ${(() => {
