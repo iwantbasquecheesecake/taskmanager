@@ -551,7 +551,13 @@ class AppUI {
                     <input type="color" class="input-role-color" data-color-role-id="${r.id}" value="${r.color}" title="색상 변경" style="width: 24px; height: 24px; border: none; border-radius: 50%; cursor: pointer; background: transparent; padding: 0;" />
                     <span style="color: ${r.color}; font-weight: 600; font-size: 0.9rem;">${r.name}</span>
                   </div>
-                  <div style="display: flex; gap: 6px; align-items: center;">
+                  <div style="display: flex; gap: 4px; align-items: center;">
+                    <button class="btn-action-move" data-move-role-id="${r.id}" data-dir="up" title="위로 이동" style="background: #ffffff; border: 1px solid var(--border-color); color: var(--text-muted); padding: 3px 7px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s ease;">
+                      ▲
+                    </button>
+                    <button class="btn-action-move" data-move-role-id="${r.id}" data-dir="down" title="아래로 이동" style="background: #ffffff; border: 1px solid var(--border-color); color: var(--text-muted); padding: 3px 7px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s ease;">
+                      ▼
+                    </button>
                     <button class="btn-action-edit" data-edit-role-id="${r.id}" title="이름 수정" style="background: #ffffff; border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: all 0.2s ease;">
                       이름 수정
                     </button>
@@ -848,6 +854,14 @@ class AppUI {
         }
       });
     }
+
+    document.querySelectorAll('.btn-action-move[data-move-role-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const roleId = e.currentTarget.getAttribute('data-move-role-id');
+        const dir = e.currentTarget.getAttribute('data-dir');
+        store.reorderRole(roleId, dir);
+      });
+    });
 
     document.querySelectorAll('.input-role-color[data-color-role-id]').forEach(input => {
       input.addEventListener('change', (e) => {

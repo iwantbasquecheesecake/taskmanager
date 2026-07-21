@@ -210,6 +210,23 @@ class AppStore {
     }
   }
 
+  reorderRole(roleId, direction) {
+    const idx = this.roles.findIndex(r => r.id === roleId);
+    if (idx <= 0) return;
+
+    if (direction === 'up' && idx > 1) {
+      const temp = this.roles[idx];
+      this.roles[idx] = this.roles[idx - 1];
+      this.roles[idx - 1] = temp;
+      this.save();
+    } else if (direction === 'down' && idx < this.roles.length - 1) {
+      const temp = this.roles[idx];
+      this.roles[idx] = this.roles[idx + 1];
+      this.roles[idx + 1] = temp;
+      this.save();
+    }
+  }
+
   deleteRole(roleId) {
     if (roleId === 'all') return;
     this.roles = this.roles.filter(r => r.id !== roleId);
