@@ -514,7 +514,7 @@ class AppUI {
                   <span style="color: ${r.color}; font-weight: 600; font-size: 0.88rem;">${r.name}</span>
                   <div style="display: flex; gap: 4px; align-items: center;">
                     <button class="btn-action-edit" data-edit-role-id="${r.id}" title="수정" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s ease;">
-                      ✏️ 수정
+                      수정
                     </button>
                     <button class="btn-action-delete" data-delete-role-id="${r.id}" title="삭제" style="opacity: 1; font-size: 0.75rem;">
                       삭제
