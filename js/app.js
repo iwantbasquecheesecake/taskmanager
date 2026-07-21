@@ -196,7 +196,7 @@ class AppUI {
             <div class="view-switcher">
               <button class="view-btn ${this.viewMode === 'dashboard' ? 'active' : ''}" id="btn-view-dashboard">
                 <i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i>
-                3단 대시보드
+                대시보드
               </button>
               <button class="view-btn ${this.viewMode === 'calendar' ? 'active' : ''}" id="btn-view-calendar">
                 <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
