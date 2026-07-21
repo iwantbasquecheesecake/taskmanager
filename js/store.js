@@ -154,11 +154,20 @@ class AppStore {
       id: 'item-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
       completed: false,
       pinned: false,
+      memo: '',
       createdAt: Date.now(),
       ...item
     };
     this.items.unshift(newItem);
     this.save();
+  }
+
+  updateItem(id, fields) {
+    const item = this.items.find(i => i.id === id);
+    if (item) {
+      Object.assign(item, fields);
+      this.save();
+    }
   }
 
   toggleItemComplete(id) {

@@ -60,6 +60,7 @@ class AppUI {
     this.viewMode = 'dashboard';
     this.calendarDate = new Date();
     this.selectedDateISO = formatDateISO(new Date());
+    this.selectedItemId = null;
     this.init();
     store.subscribe(() => this.render());
   }
@@ -73,8 +74,14 @@ class AppUI {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeRoleModal();
+        this.closeDetailModal();
       }
     });
+  }
+
+  closeDetailModal() {
+    this.selectedItemId = null;
+    this.render();
   }
 
   openRoleModal() {
@@ -284,7 +291,7 @@ class AppUI {
                   const role = getRole(roles, item.roleId);
                   const ddayStr = getDDayString(item.dueDate);
                   return `
-                    <div class="dday-card">
+                    <div class="dday-card" data-detail-id="${item.id}" style="cursor: pointer;">
                       <div class="dday-top">
                         <div class="dday-info">
                           <h3 style="font-size: 0.95rem;">${this.escapeHtml(item.title)}</h3>
@@ -295,7 +302,7 @@ class AppUI {
                         <span class="dday-badge">${ddayStr}</span>
                       </div>
                       <div class="dday-meta">
-                        <span>🎯 마감: ${formatDate(item.dueDate) || '날짜 미정'}</span>
+                        <span>🎯 마감: ${formatDate(item.dueDate) || '날짜 미정'}${item.memo ? ' <span style="font-size: 0.72rem; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 5px; border-radius: 4px; margin-left: 4px;">📝 메모</span>' : ''}</span>
                         <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
                           <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
                         </button>
@@ -327,15 +334,21 @@ class AppUI {
                 ` : weeklyItems.map(item => {
                   const role = getRole(roles, item.roleId);
                   return `
-                    <div class="task-item ${item.completed ? 'completed' : ''}">
+                    <div class="task-item ${item.completed ? 'completed' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
                       <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
                         ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
                       </div>
                       <div class="task-content">
                         <span class="task-title" style="font-size: 0.9rem;">${this.escapeHtml(item.title)}</span>
-                        <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; width: fit-content;">
-                          ${role.name}
-                        </span>
+                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                          <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; width: fit-content;">
+                            ${role.name}
+                          </span>
+                          <span style="font-size: 0.75rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 3px;">
+                            📅 ${formatDate(item.dueDate) || '기한 없음'}
+                          </span>
+                          ${item.memo ? '<span style="font-size: 0.72rem; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
+                        </div>
                       </div>
                       <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
                         <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
@@ -368,7 +381,7 @@ class AppUI {
                 ` : reminderItems.map(item => {
                   const role = getRole(roles, item.roleId);
                   return `
-                    <div class="reminder-item ${item.completed ? 'completed' : ''} ${item.pinned ? 'pinned' : ''}">
+                    <div class="reminder-item ${item.completed ? 'completed' : ''} ${item.pinned ? 'pinned' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
                       <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
                         ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
                       </div>
@@ -377,9 +390,15 @@ class AppUI {
                           <span class="reminder-cat-badge">${item.category || '📌 리마인더'}</span>
                           <span class="task-title" style="font-size: 0.88rem;">${this.escapeHtml(item.title)}</span>
                         </div>
-                        <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; width: fit-content;">
-                          ${role.name}
-                        </span>
+                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                          <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; width: fit-content;">
+                            ${role.name}
+                          </span>
+                          <span style="font-size: 0.75rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 3px;">
+                            📅 ${formatDate(item.dueDate) || '날짜 미정'}
+                          </span>
+                          ${item.memo ? '<span style="font-size: 0.72rem; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
+                        </div>
                       </div>
                       <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
                         <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
@@ -472,7 +491,7 @@ class AppUI {
                   }
 
                   return `
-                    <div class="side-task-item ${item.completed ? 'completed' : ''}">
+                    <div class="side-task-item ${item.completed ? 'completed' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
                       <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
                         <span class="task-title" style="font-size: 0.88rem; flex: 1;">${this.escapeHtml(item.title)}</span>
                         <span style="font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap;">
@@ -559,6 +578,67 @@ class AppUI {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Task Detail Modal -->
+      <div class="modal-overlay ${this.selectedItemId ? 'open' : ''}" id="task-detail-modal">
+        ${(() => {
+          if (!this.selectedItemId) return '';
+          const activeItem = state.items.find(i => i.id === this.selectedItemId);
+          if (!activeItem) return '';
+          const role = getRole(roles, activeItem.roleId);
+
+          return `
+            <div class="modal-card" style="max-width: 480px;">
+              <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; font-size: 0.82rem;">${role.name}</span>
+                  <span style="font-size: 0.8rem; color: var(--text-muted);">
+                    ${activeItem.type === 'dday' ? '🏆 D-Day' : (activeItem.type === 'weekly' ? '📅 주간 과제' : '🔔 일상')}
+                  </span>
+                </div>
+                <button class="btn-close" id="btn-close-detail-modal">✕</button>
+              </div>
+
+              <form id="form-edit-task" class="form-group" style="gap: 12px;">
+                <div>
+                  <label style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 0.85rem;">할 일 제목</label>
+                  <input type="text" id="detail-title-input" class="form-input" value="${this.escapeHtml(activeItem.title)}" required style="width: 100%; font-size: 0.95rem; font-weight: 600;" />
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                  <div style="flex: 1;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 0.85rem;">마감일 / 날짜</label>
+                    <input type="date" id="detail-date-input" class="form-input" value="${activeItem.dueDate || ''}" style="width: 100%;" />
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 0.85rem;">카테고리</label>
+                    <select id="detail-role-select" class="form-input" style="width: 100%;">
+                      ${roles.filter(r => r.id !== 'all').map(r => `
+                        <option value="${r.id}" ${r.id === activeItem.roleId ? 'selected' : ''}>${r.name}</option>
+                      `).join('')}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 0.85rem;">📝 상세 메모 & 메모장</label>
+                  <textarea id="detail-memo-input" class="form-input" rows="4" placeholder="자세한 정보, 메모, 챙길 것 등을 입력해두세요..." style="width: 100%; resize: vertical; font-family: inherit; font-size: 0.88rem; line-height: 1.5;">${this.escapeHtml(activeItem.memo || '')}</textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                  <button type="button" id="btn-delete-detail-item" style="background: rgba(224,122,95,0.12); color: var(--accent-warm-earth); border: 1px solid rgba(224,122,95,0.25); border-radius: 6px; font-size: 0.82rem; font-weight: 600; padding: 6px 12px; cursor: pointer;">
+                    🗑️ 삭제
+                  </button>
+                  <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn-primary" id="btn-cancel-detail" style="background: rgba(0,0,0,0.05); color: var(--text-main); border: 1px solid var(--border-color);">취소</button>
+                    <button type="submit" class="btn-primary">저장하기</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          `;
+        })()}
       </div>
     `;
 
@@ -660,6 +740,64 @@ class AppUI {
         }
 
         titleInput.value = '';
+      });
+    }
+
+    document.querySelectorAll('[data-detail-id]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.task-checkbox') || e.target.closest('.btn-action-delete')) {
+          return;
+        }
+        const id = el.getAttribute('data-detail-id');
+        this.selectedItemId = id;
+        this.render();
+      });
+    });
+
+    const btnCloseDetail = document.getElementById('btn-close-detail-modal');
+    if (btnCloseDetail) {
+      btnCloseDetail.addEventListener('click', () => this.closeDetailModal());
+    }
+
+    const btnCancelDetail = document.getElementById('btn-cancel-detail');
+    if (btnCancelDetail) {
+      btnCancelDetail.addEventListener('click', () => this.closeDetailModal());
+    }
+
+    const btnDeleteDetail = document.getElementById('btn-delete-detail-item');
+    if (btnDeleteDetail) {
+      btnDeleteDetail.addEventListener('click', () => {
+        if (this.selectedItemId && confirm('이 태스크를 삭제하시겠습니까?')) {
+          store.deleteItem(this.selectedItemId);
+          this.closeDetailModal();
+        }
+      });
+    }
+
+    const formEditTask = document.getElementById('form-edit-task');
+    if (formEditTask) {
+      formEditTask.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!this.selectedItemId) return;
+        const titleInput = document.getElementById('detail-title-input');
+        const dateInput = document.getElementById('detail-date-input');
+        const roleSelect = document.getElementById('detail-role-select');
+        const memoInput = document.getElementById('detail-memo-input');
+
+        const title = titleInput.value.trim();
+        const dueDate = dateInput.value;
+        const roleId = roleSelect.value;
+        const memo = memoInput.value;
+
+        if (title) {
+          store.updateItem(this.selectedItemId, {
+            title,
+            dueDate,
+            roleId,
+            memo
+          });
+          this.closeDetailModal();
+        }
       });
     }
 
