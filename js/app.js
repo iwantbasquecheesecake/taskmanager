@@ -232,7 +232,7 @@ class AppUI {
               type="text" 
               id="input-title" 
               class="quick-add-input" 
-              placeholder="자신만의 할 일, 자격증, 병원 예약을 1초 만에 등록하세요..." 
+              placeholder="이곳에 할 일을 등록하세요..." 
               required 
               autocomplete="off"
             />
