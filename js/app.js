@@ -61,6 +61,7 @@ class AppUI {
     this.calendarDate = new Date();
     this.selectedDateISO = formatDateISO(new Date());
     this.selectedItemId = null;
+    this.isRoleModalOpen = false;
     this.init();
     store.subscribe(() => this.render());
   }
@@ -85,13 +86,13 @@ class AppUI {
   }
 
   openRoleModal() {
-    const modal = document.getElementById('role-modal');
-    if (modal) modal.classList.add('open');
+    this.isRoleModalOpen = true;
+    this.render();
   }
 
   closeRoleModal() {
-    const modal = document.getElementById('role-modal');
-    if (modal) modal.classList.remove('open');
+    this.isRoleModalOpen = false;
+    this.render();
   }
 
   renderCalendarDays(filteredItems, roles) {
@@ -525,7 +526,7 @@ class AppUI {
       </div>
 
       <!-- Settings Modal -->
-      <div class="modal-overlay" id="role-modal">
+      <div class="modal-overlay ${this.isRoleModalOpen ? 'open' : ''}" id="role-modal">
         <div class="modal-card" style="max-width: 500px; padding: 26px; gap: 20px; max-height: 90vh; overflow-y: auto;">
           <div class="modal-header" style="padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">
             <h3 style="font-size: 1.2rem;">설정 & 커스텀 관리</h3>
@@ -844,7 +845,6 @@ class AppUI {
         if (name) {
           store.addRole(name, color);
           inputName.value = '';
-          this.closeRoleModal();
         }
       });
     }
