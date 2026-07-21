@@ -1,0 +1,204 @@
+/* ==========================================
+   OneGlance Roles - LocalStorage State Store
+   ========================================== */
+
+const STORAGE_KEY = 'oneglance_roles_data_v1';
+
+// Default Initial Roles
+const DEFAULT_ROLES = [
+  { id: 'all', name: '✨ 전체 보기', icon: 'Sparkles', color: '#2d5a27', shadow: 'rgba(45, 90, 39, 0.3)' },
+  { id: 'role-president', name: '👑 학생회장', icon: 'Crown', color: '#3a6b35', shadow: 'rgba(58, 107, 53, 0.3)' },
+  { id: 'role-student', name: '🎓 대학생', icon: 'GraduationCap', color: '#1f6f8b', shadow: 'rgba(31, 111, 139, 0.3)' },
+  { id: 'role-personal', name: '🎈 개인', icon: 'Smile', color: '#e07a5f', shadow: 'rgba(224, 122, 95, 0.3)' }
+];
+
+
+// Initial Welcome Sample Items for First Time Users
+const DEFAULT_ITEMS = [
+  {
+    id: 'dday-welcome-1',
+    type: 'dday',
+    roleId: 'role-student',
+    title: '정보처리기사 실기 시험 📝',
+    dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+    createdAt: Date.now()
+  },
+  {
+    id: 'weekly-welcome-1',
+    type: 'weekly',
+    roleId: 'role-president',
+    title: '학생회 각 부서 주간 예산안 검토',
+    completed: false,
+    createdAt: Date.now()
+  },
+  {
+    id: 'rem-welcome-1',
+    type: 'reminder',
+    roleId: 'role-personal',
+    category: '🏥 병원',
+    title: '치과 정기 검진 예약 (오후 3시)',
+    dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+    completed: false,
+    pinned: true,
+    createdAt: Date.now()
+  }
+];
+
+class AppStore {
+  constructor() {
+    this.listeners = [];
+    this.load();
+  }
+
+  load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        this.roles = parsed.roles || DEFAULT_ROLES;
+        this.items = parsed.items || DEFAULT_ITEMS;
+        this.activeRoleId = parsed.activeRoleId || 'all';
+      } catch (e) {
+        console.error('Failed to parse local storage:', e);
+        this.initDefault();
+      }
+    } else {
+      this.initDefault();
+    }
+  }
+
+  initDefault() {
+    this.roles = [...DEFAULT_ROLES];
+    this.items = [...DEFAULT_ITEMS];
+    this.activeRoleId = 'all';
+    this.save();
+  }
+
+  clearAllTasks() {
+    this.items = [];
+    this.save();
+  }
+
+  loadSampleGuide() {
+    this.items = [...DEFAULT_ITEMS];
+    this.save();
+  }
+
+  exportJSON() {
+    return JSON.stringify({
+      roles: this.roles,
+      items: this.items,
+      version: '1.0'
+    }, null, 2);
+  }
+
+  importJSON(jsonString) {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (parsed.roles && parsed.items) {
+        this.roles = parsed.roles;
+        this.items = parsed.items;
+        this.save();
+        return true;
+      }
+    } catch (e) {
+      console.error('Import failed:', e);
+    }
+    return false;
+  }
+
+  save() {
+    const data = {
+      roles: this.roles,
+      items: this.items,
+      activeRoleId: this.activeRoleId
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    this.notify();
+  }
+
+  subscribe(listener) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  notify() {
+    this.listeners.forEach(l => l(this.getState()));
+  }
+
+  getState() {
+    return {
+      roles: this.roles,
+      items: this.items,
+      activeRoleId: this.activeRoleId,
+      filteredItems: this.getFilteredItems()
+    };
+  }
+
+  setActiveRole(roleId) {
+    this.activeRoleId = roleId;
+    this.save();
+  }
+
+  getFilteredItems() {
+    if (this.activeRoleId === 'all') {
+      return this.items;
+    }
+    return this.items.filter(item => item.roleId === this.activeRoleId);
+  }
+
+  addItem(item) {
+    const newItem = {
+      id: 'item-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+      completed: false,
+      pinned: false,
+      createdAt: Date.now(),
+      ...item
+    };
+    this.items.unshift(newItem);
+    this.save();
+  }
+
+  toggleItemComplete(id) {
+    const item = this.items.find(i => i.id === id);
+    if (item) {
+      item.completed = !item.completed;
+      this.save();
+    }
+  }
+
+  deleteItem(id) {
+    this.items = this.items.filter(i => i.id !== id);
+    this.save();
+  }
+
+  addRole(name, color) {
+    const newRole = {
+      id: 'role-' + Date.now(),
+      name: name,
+      color: color || '#2d5a27',
+      shadow: `${color}66`
+    };
+    this.roles.push(newRole);
+    this.save();
+  }
+
+  deleteRole(roleId) {
+    if (roleId === 'all') return;
+    this.roles = this.roles.filter(r => r.id !== roleId);
+    const fallbackId = this.roles[1]?.id || 'all';
+    this.items.forEach(item => {
+      if (item.roleId === roleId) {
+        item.roleId = fallbackId;
+      }
+    });
+    if (this.activeRoleId === roleId) {
+      this.activeRoleId = 'all';
+    }
+    this.save();
+  }
+}
+
+export const store = new AppStore();
