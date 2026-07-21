@@ -507,14 +507,17 @@ class AppUI {
           </form>
 
           <div style="border-top: 1px solid var(--border-color); pt-3;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 8px;">현재 카테고리 목록</label>
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 8px;">현재 카테고리 목록 (색상 팔레트를 눌러 색상 변경 가능)</label>
             <div style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto;">
               ${roles.filter(r => r.id !== 'all').map(r => `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(0,0,0,0.03); border-radius: 6px;">
-                  <span style="color: ${r.color}; font-weight: 600; font-size: 0.88rem;">${r.name}</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <input type="color" class="input-role-color" data-color-role-id="${r.id}" value="${r.color}" title="색상 변경" style="width: 22px; height: 22px; border: none; border-radius: 50%; cursor: pointer; background: transparent; padding: 0;" />
+                    <span style="color: ${r.color}; font-weight: 600; font-size: 0.88rem;">${r.name}</span>
+                  </div>
                   <div style="display: flex; gap: 4px; align-items: center;">
-                    <button class="btn-action-edit" data-edit-role-id="${r.id}" title="수정" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s ease;">
-                      수정
+                    <button class="btn-action-edit" data-edit-role-id="${r.id}" title="이름 수정" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s ease;">
+                      이름 수정
                     </button>
                     <button class="btn-action-delete" data-delete-role-id="${r.id}" title="삭제" style="opacity: 1; font-size: 0.75rem;">
                       삭제
@@ -696,6 +699,14 @@ class AppUI {
       });
     }
 
+    document.querySelectorAll('.input-role-color[data-color-role-id]').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const roleId = e.currentTarget.getAttribute('data-color-role-id');
+        const newColor = e.currentTarget.value;
+        store.updateRole(roleId, null, newColor);
+      });
+    });
+
     document.querySelectorAll('.btn-action-edit[data-edit-role-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const roleId = e.currentTarget.getAttribute('data-edit-role-id');
@@ -703,7 +714,7 @@ class AppUI {
         if (currentRole) {
           const newName = prompt('변경할 카테고리 이름을 입력하세요:', currentRole.name);
           if (newName !== null && newName.trim() !== '') {
-            store.updateRole(roleId, newName.trim());
+            store.updateRole(roleId, newName.trim(), null);
           }
         }
       });
