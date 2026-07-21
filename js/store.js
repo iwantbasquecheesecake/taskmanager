@@ -185,6 +185,18 @@ class AppStore {
     this.save();
   }
 
+  updateRole(roleId, newName, newColor) {
+    const role = this.roles.find(r => r.id === roleId);
+    if (role) {
+      if (newName) role.name = newName;
+      if (newColor) {
+        role.color = newColor;
+        role.shadow = `${newColor}66`;
+      }
+      this.save();
+    }
+  }
+
   deleteRole(roleId) {
     if (roleId === 'all') return;
     this.roles = this.roles.filter(r => r.id !== roleId);
