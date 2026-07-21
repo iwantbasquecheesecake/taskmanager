@@ -34,6 +34,19 @@ function getDiffDaysFromSelected(dueDateStr, selectedDateISO) {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+// Sort Items By Urgency (Imminent Due Dates First)
+function sortItemsByUrgency(items, selectedDateISO) {
+  return [...items].sort((a, b) => {
+    const diffA = getDiffDaysFromSelected(a.dueDate, selectedDateISO);
+    const diffB = getDiffDaysFromSelected(b.dueDate, selectedDateISO);
+
+    if (diffA >= 0 && diffB < 0) return -1;
+    if (diffA < 0 && diffB >= 0) return 1;
+
+    return diffA - diffB;
+  });
+}
+
 // Format Date string
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -342,7 +355,9 @@ class AppUI {
               <main class="dashboard-grid">
                 ${roles.filter(r => r.id !== 'all').map(role => {
                   const roleItems = filteredItems.filter(item => item.roleId === role.id);
-                  const pendingItems = roleItems.filter(i => !i.completed);
+                  const pendingItems = sortItemsByUrgency(roleItems.filter(i => !i.completed), this.selectedDateISO);
+                  const completedItems = roleItems.filter(i => i.completed);
+                  const displayItems = [...pendingItems, ...completedItems];
 
                   return `
                     <section class="column-card" style="border-top: 3.5px solid ${role.color};">
@@ -358,12 +373,12 @@ class AppUI {
                       </div>
 
                       <div class="item-list">
-                        ${roleItems.length === 0 ? `
+                        ${displayItems.length === 0 ? `
                           <div class="empty-state" style="padding: 28px 10px;">
                             <i data-lucide="check-circle-2" style="width: 28px; height: 28px; opacity: 0.35;"></i>
                             <p style="font-size: 0.82rem;">등록된 할 일이 없습니다.</p>
                           </div>
-                        ` : roleItems.map(item => {
+                        ` : displayItems.map(item => {
                           const ddayStr = item.dueDate ? getDDayString(item.dueDate) : '';
                           return `
                             <div class="task-item ${item.completed ? 'completed' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
@@ -398,7 +413,7 @@ class AppUI {
             ${(() => {
               const currentRole = getRole(roles, activeRoleId);
               const roleItems = filteredItems;
-              const pendingItems = roleItems.filter(i => !i.completed);
+              const pendingItems = sortItemsByUrgency(roleItems.filter(i => !i.completed), this.selectedDateISO);
               const completedItems = roleItems.filter(i => i.completed);
               const completedPercent = roleItems.length > 0 ? Math.round((completedItems.length / roleItems.length) * 100) : 0;
 
