@@ -236,12 +236,6 @@ class AppUI {
               autocomplete="off"
             />
             
-            <select id="select-type" class="select-type">
-              <option value="weekly">📅 이번 주 과제</option>
-              <option value="reminder">🔔 일상</option>
-              <option value="dday">🏆 D-Day 마감일/시험</option>
-            </select>
-
             <input 
               type="date" 
               id="input-date" 
@@ -266,151 +260,166 @@ class AppUI {
 
         <!-- Main Content View Switch -->
         ${this.viewMode === 'dashboard' ? `
-          <!-- 3-Column Grid Dashboard -->
-          <main class="dashboard-grid">
-            
-            <!-- Column 1: D-Day & Long-term Goals -->
-            <section class="column-card">
-              <div class="column-header">
-                <div class="column-title">
-                  <div class="column-icon icon-dday">
-                    <i data-lucide="trophy" style="width: 16px; height: 16px;"></i>
-                  </div>
-                  <h2>D-Day & 마감일</h2>
-                </div>
-                <span class="item-count">${ddayItems.length}개</span>
-              </div>
+          ${activeRoleId === 'all' ? `
+            <!-- Overall View: Grid of All Categories -->
+            <main class="dashboard-grid">
+              ${roles.filter(r => r.id !== 'all').map(role => {
+                const roleItems = filteredItems.filter(item => item.roleId === role.id);
+                const pendingItems = roleItems.filter(i => !i.completed);
 
-              <div class="item-list">
-                ${ddayItems.length === 0 ? `
-                  <div class="empty-state">
-                    <i data-lucide="calendar" style="width: 32px; height: 32px;"></i>
-                    <p style="font-size: 0.85rem;">등록된 D-Day 시험이나 마감일이 없습니다.</p>
-                  </div>
-                ` : ddayItems.map(item => {
-                  const role = getRole(roles, item.roleId);
-                  const ddayStr = getDDayString(item.dueDate);
-                  return `
-                    <div class="dday-card" data-detail-id="${item.id}" style="cursor: pointer;">
-                      <div class="dday-top">
-                        <div class="dday-info">
-                          <h3 style="font-size: 0.95rem;">${this.escapeHtml(item.title)}</h3>
-                          <span class="role-tag" style="background: ${role.color}15; color: ${role.color};">
-                            ${role.name}
-                          </span>
-                        </div>
-                        <span class="dday-badge">${ddayStr}</span>
+                return `
+                  <section class="column-card" style="border-top: 3.5px solid ${role.color};">
+                    <div class="column-header">
+                      <div class="column-title">
+                        <span class="role-tag" style="background: ${role.color}18; color: ${role.color}; font-size: 0.95rem; padding: 4px 10px; font-weight: 700;">
+                          ${role.name}
+                        </span>
                       </div>
-                      <div class="dday-meta">
-                        <span>🎯 마감: ${formatDate(item.dueDate) || '날짜 미정'}${item.memo ? ' <span style="font-size: 0.72rem; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 5px; border-radius: 4px; margin-left: 4px;">📝 메모</span>' : ''}</span>
-                        <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
-                          <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
-                        </button>
+                      <span class="item-count" style="background: ${role.color}15; color: ${role.color};">
+                        ${pendingItems.length}개 남음
+                      </span>
+                    </div>
+
+                    <div class="item-list">
+                      ${roleItems.length === 0 ? `
+                        <div class="empty-state" style="padding: 28px 10px;">
+                          <i data-lucide="check-circle-2" style="width: 28px; height: 28px; opacity: 0.35;"></i>
+                          <p style="font-size: 0.82rem;">등록된 할 일이 없습니다.</p>
+                        </div>
+                      ` : roleItems.map(item => {
+                        const ddayStr = item.dueDate ? getDDayString(item.dueDate) : '';
+                        return `
+                          <div class="task-item ${item.completed ? 'completed' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
+                            <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
+                              ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
+                            </div>
+                            <div class="task-content">
+                              <span class="task-title" style="font-size: 0.88rem;">${this.escapeHtml(item.title)}</span>
+                              <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                                ${item.dueDate ? `
+                                  <span style="font-size: 0.72rem; font-weight: 600; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 6px; border-radius: 4px;">
+                                    ${ddayStr} (${formatDate(item.dueDate)})
+                                  </span>
+                                ` : ''}
+                                ${item.memo ? '<span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
+                              </div>
+                            </div>
+                            <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
+                              <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                            </button>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  </section>
+                `;
+              }).join('')}
+            </main>
+          ` : `
+            <!-- Single Category Focused View -->
+            ${(() => {
+              const currentRole = getRole(roles, activeRoleId);
+              const roleItems = filteredItems;
+              const pendingItems = roleItems.filter(i => !i.completed);
+              const completedItems = roleItems.filter(i => i.completed);
+              const completedPercent = roleItems.length > 0 ? Math.round((completedItems.length / roleItems.length) * 100) : 0;
+
+              return `
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                  <!-- Category Header -->
+                  <div class="column-card" style="border-left: 5px solid ${currentRole.color};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                      <div>
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: ${currentRole.color}; margin-bottom: 2px;">${currentRole.name} 할 일 관리</h2>
+                        <span style="font-size: 0.82rem; color: var(--text-muted);">총 ${roleItems.length}개 항목 중 ${pendingItems.length}개 남음</span>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 10px; min-width: 200px;">
+                        <div style="flex: 1; height: 8px; background: rgba(0,0,0,0.06); border-radius: 4px; overflow: hidden;">
+                          <div style="width: ${completedPercent}%; height: 100%; background: ${currentRole.color}; transition: width 0.3s ease;"></div>
+                        </div>
+                        <span style="font-weight: 700; font-size: 0.85rem; color: ${currentRole.color};">${completedPercent}% 완료</span>
                       </div>
                     </div>
-                  `;
-                }).join('')}
-              </div>
-            </section>
-
-            <!-- Column 2: Weekly Focus Tasks -->
-            <section class="column-card">
-              <div class="column-header">
-                <div class="column-title">
-                  <div class="column-icon icon-weekly">
-                    <i data-lucide="check-square" style="width: 16px; height: 16px;"></i>
                   </div>
-                  <h2>이번 주 핵심 과제</h2>
+
+                  <!-- 2 Column Layout: Pending vs Completed -->
+                  <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr;">
+                    <!-- Pending Section -->
+                    <section class="column-card">
+                      <div class="column-header">
+                        <div class="column-title">
+                          <h2 style="font-size: 1.05rem;">📌 진행 중인 할 일</h2>
+                        </div>
+                        <span class="item-count" style="background: ${currentRole.color}15; color: ${currentRole.color};">${pendingItems.length}개</span>
+                      </div>
+
+                      <div class="item-list">
+                        ${pendingItems.length === 0 ? `
+                          <div class="empty-state">
+                            <i data-lucide="sparkles" style="width: 32px; height: 32px; color: var(--accent-forest);"></i>
+                            <p style="font-size: 0.88rem; font-weight: 600;">모든 할 일을 구체적으로 완료했습니다! 🎉</p>
+                          </div>
+                        ` : pendingItems.map(item => {
+                          const ddayStr = item.dueDate ? getDDayString(item.dueDate) : '';
+                          return `
+                            <div class="task-item" data-detail-id="${item.id}" style="cursor: pointer;">
+                              <div class="task-checkbox" data-toggle-id="${item.id}"></div>
+                              <div class="task-content">
+                                <span class="task-title" style="font-size: 0.92rem;">${this.escapeHtml(item.title)}</span>
+                                <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                                  ${item.dueDate ? `
+                                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 2px 7px; border-radius: 4px;">
+                                      ${ddayStr} (${formatDate(item.dueDate)})
+                                    </span>
+                                  ` : ''}
+                                  ${item.memo ? '<span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 2px 6px; border-radius: 4px;">📝 메모</span>' : ''}
+                                </div>
+                              </div>
+                              <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
+                                <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                              </button>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </section>
+
+                    <!-- Completed Section -->
+                    <section class="column-card">
+                      <div class="column-header">
+                        <div class="column-title">
+                          <h2 style="font-size: 1.05rem;">✅ 완료함</h2>
+                        </div>
+                        <span class="item-count">${completedItems.length}개</span>
+                      </div>
+
+                      <div class="item-list">
+                        ${completedItems.length === 0 ? `
+                          <div class="empty-state" style="padding: 24px 10px;">
+                            <p style="font-size: 0.82rem;">완료된 항목이 없습니다.</p>
+                          </div>
+                        ` : completedItems.map(item => {
+                          return `
+                            <div class="task-item completed" data-detail-id="${item.id}" style="cursor: pointer;">
+                              <div class="task-checkbox checked" data-toggle-id="${item.id}">
+                                <i data-lucide="check" style="width: 13px; height: 13px;"></i>
+                              </div>
+                              <div class="task-content">
+                                <span class="task-title" style="font-size: 0.88rem;">${this.escapeHtml(item.title)}</span>
+                              </div>
+                              <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
+                                <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                              </button>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </section>
+                  </div>
                 </div>
-                <span class="item-count">${weeklyItems.filter(i => !i.completed).length}개 남음</span>
-              </div>
-
-              <div class="item-list">
-                ${weeklyItems.length === 0 ? `
-                  <div class="empty-state">
-                    <i data-lucide="check-circle" style="width: 32px; height: 32px;"></i>
-                    <p style="font-size: 0.85rem;">이번 주 할 일이 비어있습니다!</p>
-                  </div>
-                ` : weeklyItems.map(item => {
-                  const role = getRole(roles, item.roleId);
-                  return `
-                    <div class="task-item ${item.completed ? 'completed' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
-                      <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
-                        ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
-                      </div>
-                      <div class="task-content">
-                        <span class="task-title" style="font-size: 0.9rem;">${this.escapeHtml(item.title)}</span>
-                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
-                          <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; width: fit-content;">
-                            ${role.name}
-                          </span>
-                          <span style="font-size: 0.75rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 3px;">
-                            📅 ${formatDate(item.dueDate) || '기한 없음'}
-                          </span>
-                          ${item.memo ? '<span style="font-size: 0.72rem; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
-                        </div>
-                      </div>
-                      <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
-                        <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
-                      </button>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            </section>
-
-            <!-- Column 3: Quick Life Reminders -->
-            <section class="column-card">
-              <div class="column-header">
-                <div class="column-title">
-                  <div class="column-icon icon-reminder">
-                    <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
-                  </div>
-                  <h2>일상</h2>
-                </div>
-                <span class="item-count">${reminderItems.filter(i => !i.completed).length}개</span>
-              </div>
-
-
-              <div class="item-list">
-                ${reminderItems.length === 0 ? `
-                  <div class="empty-state">
-                    <i data-lucide="heart" style="width: 32px; height: 32px;"></i>
-                    <p style="font-size: 0.85rem;">병원 예약, 중요 전화 등을 적어두세요.</p>
-                  </div>
-                ` : reminderItems.map(item => {
-                  const role = getRole(roles, item.roleId);
-                  return `
-                    <div class="reminder-item ${item.completed ? 'completed' : ''} ${item.pinned ? 'pinned' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
-                      <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
-                        ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
-                      </div>
-                      <div class="task-content">
-                        <div style="display: flex; gap: 6px; align-items: center;">
-                          <span class="reminder-cat-badge">${item.category || '📌 리마인더'}</span>
-                          <span class="task-title" style="font-size: 0.88rem;">${this.escapeHtml(item.title)}</span>
-                        </div>
-                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
-                          <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; width: fit-content;">
-                            ${role.name}
-                          </span>
-                          <span style="font-size: 0.75rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 3px;">
-                            📅 ${formatDate(item.dueDate) || '날짜 미정'}
-                          </span>
-                          ${item.memo ? '<span style="font-size: 0.72rem; color: var(--accent-forest); background: rgba(45,90,39,0.08); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
-                        </div>
-                      </div>
-                      <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
-                        <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
-                      </button>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            </section>
-
-          </main>
-        ` : `
+              `;
+            })()}
+          `}` : `
           <!-- Calendar 2-Column Layout -->
           <div class="calendar-layout-grid">
             <main class="calendar-card" style="padding: 16px;">
@@ -708,30 +717,21 @@ class AppUI {
       quickForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const titleInput = document.getElementById('input-title');
-        const typeSelect = document.getElementById('select-type');
         const dateInput = document.getElementById('input-date');
         const roleSelect = document.getElementById('select-role');
 
         const title = titleInput.value.trim();
-        const type = typeSelect.value;
         const roleId = roleSelect.value;
         const dueDate = (dateInput && dateInput.value) ? dateInput.value : (this.selectedDateISO || formatDateISO(new Date()));
 
         if (!title) return;
 
-        let category = '📌 일상';
-        if (type === 'reminder') {
-          if (title.includes('병원') || title.includes('진료') || title.includes('검진')) category = '🏥 병원';
-          else if (title.includes('전화') || title.includes('연락') || title.includes('통화')) category = '📞 중요 연락';
-          else if (title.includes('과제') || title.includes('제출') || title.includes('보고서')) category = '📝 과제';
-        }
-
         store.addItem({
           title,
-          type,
+          type: 'task',
           roleId,
           dueDate,
-          category
+          category: '📌 할 일'
         });
 
         // 사용자가 선택한 카테고리로 탭을 맞춰 생성된 항목이 즉시 보이게 함
