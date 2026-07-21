@@ -526,35 +526,35 @@ class AppUI {
 
       <!-- Settings Modal -->
       <div class="modal-overlay" id="role-modal">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3>설정 & 커스텀 관리</h3>
+        <div class="modal-card" style="max-width: 500px; padding: 26px; gap: 20px; max-height: 90vh; overflow-y: auto;">
+          <div class="modal-header" style="padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.2rem;">설정 & 커스텀 관리</h3>
             <button class="btn-close" id="btn-close-modal">✕</button>
           </div>
 
-          <form id="form-add-role" class="form-group">
-            <label style="font-weight: 600;">1. 나만의 역할(Role) 추가하기</label>
+          <form id="form-add-role" class="form-group" style="gap: 8px;">
+            <label style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">1. 나만의 역할(Role) 추가하기</label>
             <div style="display: flex; gap: 8px;">
               <input type="text" id="role-name-input" class="form-input" placeholder="예: 💼 동아리장, 🚗 운전면허..." required style="flex: 1;" />
               <input type="color" id="role-color-input" value="#2d5a27" style="width: 40px; height: 38px; border: none; border-radius: 6px; cursor: pointer; background: transparent;" />
-              <button type="submit" class="btn-primary">추가</button>
+              <button type="submit" class="btn-primary" style="white-space: nowrap;">추가</button>
             </div>
           </form>
 
-          <div style="border-top: 1px solid var(--border-color); pt-3;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 8px;">현재 카테고리 목록 (색상 팔레트를 눌러 색상 변경 가능)</label>
-            <div style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto;">
+          <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <label style="font-size: 0.88rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 10px;">현재 카테고리 목록 <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted);">(색상 팔레트를 눌러 색상 변경)</span></label>
+            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 4px;">
               ${roles.filter(r => r.id !== 'all').map(r => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(0,0,0,0.03); border-radius: 6px;">
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <input type="color" class="input-role-color" data-color-role-id="${r.id}" value="${r.color}" title="색상 변경" style="width: 22px; height: 22px; border: none; border-radius: 50%; cursor: pointer; background: transparent; padding: 0;" />
-                    <span style="color: ${r.color}; font-weight: 600; font-size: 0.88rem;">${r.name}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="color" class="input-role-color" data-color-role-id="${r.id}" value="${r.color}" title="색상 변경" style="width: 24px; height: 24px; border: none; border-radius: 50%; cursor: pointer; background: transparent; padding: 0;" />
+                    <span style="color: ${r.color}; font-weight: 600; font-size: 0.9rem;">${r.name}</span>
                   </div>
-                  <div style="display: flex; gap: 4px; align-items: center;">
-                    <button class="btn-action-edit" data-edit-role-id="${r.id}" title="이름 수정" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s ease;">
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <button class="btn-action-edit" data-edit-role-id="${r.id}" title="이름 수정" style="background: #ffffff; border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: all 0.2s ease;">
                       이름 수정
                     </button>
-                    <button class="btn-action-delete" data-delete-role-id="${r.id}" title="삭제" style="opacity: 1; font-size: 0.75rem;">
+                    <button class="btn-action-delete" data-delete-role-id="${r.id}" title="삭제" style="opacity: 1; font-size: 0.78rem; padding: 4px 8px;">
                       삭제
                     </button>
                   </div>
@@ -563,28 +563,32 @@ class AppUI {
             </div>
           </div>
 
-          <div style="border-top: 1px solid var(--border-color); pt-3; display: flex; flex-direction: column; gap: 8px;">
-            <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">2. 플래너 초기화</label>
-            <div style="display: flex; gap: 8px;">
-              <button type="button" class="btn-primary" id="btn-clear-tasks" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth); border: 1px solid rgba(224, 122, 95, 0.3); flex: 1;">
+          <div style="border-top: 1px solid var(--border-color); padding-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <label style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">2. 플래너 초기화 및 샘플 관리</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn-primary" id="btn-clear-tasks" style="background: rgba(224, 122, 95, 0.12); color: var(--accent-warm-earth); border: 1px solid rgba(224, 122, 95, 0.25); flex: 1; min-width: 140px; padding: 8px 12px;">
                 🧹 모든 할 일 비우기
               </button>
-              <button type="button" class="btn-primary" id="btn-load-samples" style="background: rgba(45, 90, 39, 0.12); color: var(--accent-forest); border: 1px solid rgba(45, 90, 39, 0.25); flex: 1;">
+              <button type="button" class="btn-primary" id="btn-load-samples" style="background: rgba(45, 90, 39, 0.1); color: var(--accent-forest); border: 1px solid rgba(45, 90, 39, 0.22); flex: 1; min-width: 140px; padding: 8px 12px;">
                 💡 가이드 샘플 불러오기
+              </button>
+              <button type="button" class="btn-primary" id="btn-full-reset" style="background: rgba(0, 0, 0, 0.05); color: #d90429; border: 1px solid rgba(217, 4, 41, 0.25); width: 100%; padding: 8px 12px; margin-top: 2px;">
+                🔄 전체 초기화 (기본 상태로 리셋)
               </button>
             </div>
           </div>
 
-          <div style="border-top: 1px solid var(--border-color); pt-3; display: flex; flex-direction: column; gap: 8px;">
-            <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">3. 내 데이터 백업 & 복원</label>
+          <div style="border-top: 1px solid var(--border-color); padding-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <label style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">3. 내 데이터 백업 & 복원</label>
             <div style="display: flex; gap: 8px;">
-              <button type="button" class="btn-primary" id="btn-export-json" style="background: rgba(0, 0, 0, 0.05); color: var(--text-main); border: 1px solid var(--border-color); flex: 1;">
+              <button type="button" class="btn-primary" id="btn-export-json" style="background: rgba(0, 0, 0, 0.03); color: var(--text-main); border: 1px solid var(--border-color); flex: 1; padding: 8px 12px;">
                 💾 JSON 내보내기
               </button>
-              <button type="button" class="btn-primary" id="btn-import-json" style="background: rgba(0, 0, 0, 0.05); color: var(--text-main); border: 1px solid var(--border-color); flex: 1;">
+              <button type="button" class="btn-primary" id="btn-import-json" style="background: rgba(0, 0, 0, 0.03); color: var(--text-main); border: 1px solid var(--border-color); flex: 1; padding: 8px 12px;">
                 📂 JSON 불러오기
               </button>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -890,6 +894,16 @@ class AppUI {
       btnLoadSamples.addEventListener('click', () => {
         if (confirm('가이드용 예시 데이터를 불러오시겠습니까?')) {
           store.loadSampleGuide();
+          this.closeRoleModal();
+        }
+      });
+    }
+
+    const btnFullReset = document.getElementById('btn-full-reset');
+    if (btnFullReset) {
+      btnFullReset.addEventListener('click', () => {
+        if (confirm('카테고리와 할 일을 초기 기본값으로 완전히 리셋하시겠습니까?')) {
+          store.resetToDefault();
           this.closeRoleModal();
         }
       });

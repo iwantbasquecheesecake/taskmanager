@@ -74,6 +74,10 @@ class AppStore {
     this.save();
   }
 
+  resetToDefault() {
+    this.initDefault();
+  }
+
   clearAllTasks() {
     this.items = [];
     this.save();
