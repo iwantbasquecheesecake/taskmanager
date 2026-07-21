@@ -235,7 +235,14 @@ class AppUI {
               <option value="dday">🏆 D-Day 마감일/시험</option>
             </select>
 
-
+            <input 
+              type="date" 
+              id="input-date" 
+              class="select-type" 
+              value="${this.selectedDateISO || formatDateISO(new Date())}"
+              title="날짜/마감일 선택"
+              style="font-family: inherit; color: var(--text-main);"
+            />
 
             <select id="select-role" class="select-role-inline">
               ${roles.filter(r => r.id !== 'all').map(r => `
@@ -622,22 +629,18 @@ class AppUI {
         e.preventDefault();
         const titleInput = document.getElementById('input-title');
         const typeSelect = document.getElementById('select-type');
+        const dateInput = document.getElementById('input-date');
         const roleSelect = document.getElementById('select-role');
 
         const title = titleInput.value.trim();
         const type = typeSelect.value;
         const roleId = roleSelect.value;
+        const dueDate = (dateInput && dateInput.value) ? dateInput.value : (this.selectedDateISO || formatDateISO(new Date()));
 
         if (!title) return;
 
-        let dueDate = this.selectedDateISO || formatDateISO(new Date());
-        let category = '📌 일반';
-
-        if (type === 'dday') {
-          const userDate = prompt('마감일 또는 시험일을 입력하세요 (YYYY-MM-DD):', dueDate);
-          if (!userDate) return;
-          dueDate = userDate;
-        } else if (type === 'reminder') {
+        let category = '📌 일상';
+        if (type === 'reminder') {
           if (title.includes('병원') || title.includes('진료') || title.includes('검진')) category = '🏥 병원';
           else if (title.includes('전화') || title.includes('연락') || title.includes('통화')) category = '📞 중요 연락';
           else if (title.includes('과제') || title.includes('제출') || title.includes('보고서')) category = '📝 과제';
@@ -650,6 +653,11 @@ class AppUI {
           dueDate,
           category
         });
+
+        // 사용자가 선택한 카테고리로 탭을 맞춰 생성된 항목이 즉시 보이게 함
+        if (store.activeRoleId !== 'all' && store.activeRoleId !== roleId) {
+          store.setActiveRole(roleId);
+        }
 
         titleInput.value = '';
       });
