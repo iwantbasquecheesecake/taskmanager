@@ -197,7 +197,12 @@ class AppUI {
         <header class="app-header">
           <div class="header-top">
             <div class="brand-title">
-              <h1 style="font-size: 1.3rem;">놓지마 정신줄</h1>
+              <h1 class="logo-text" style="font-size: 1.45rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span>🧠</span>
+                <span class="logo-gradient">놓지마 정신줄!</span>
+                <span>⚡</span>
+              </h1>
+              <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; font-weight: 500;">정신없는 하루를 꽉 붙잡아주는 ADHD 맞춤형 플래너</p>
             </div>
 
 
@@ -328,8 +333,10 @@ class AppUI {
                         badgeColor = 'var(--text-dim)';
                       }
 
+                      const isUrgent = diffDays !== 999 && diffDays <= 1;
+
                       return `
-                        <div class="task-item" data-detail-id="${item.id}" style="cursor: pointer;">
+                        <div class="task-item ${isUrgent ? 'urgent-glow' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
                           <div class="task-checkbox" data-toggle-id="${item.id}"></div>
                           <div class="task-content">
                             <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
@@ -456,8 +463,10 @@ class AppUI {
                           </div>
                         ` : displayItems.map(item => {
                           const ddayStr = item.dueDate ? getDDayString(item.dueDate) : '';
+                          const diffDays = getDiffDaysFromSelected(item.dueDate, this.selectedDateISO);
+                          const isUrgent = !item.completed && diffDays !== 999 && diffDays <= 1;
                           return `
-                            <div class="task-item ${item.completed ? 'completed' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
+                            <div class="task-item ${item.completed ? 'completed' : ''} ${isUrgent ? 'urgent-glow' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
                               <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
                                 ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
                               </div>
@@ -530,8 +539,10 @@ class AppUI {
                           </div>
                         ` : pendingItems.map(item => {
                           const ddayStr = item.dueDate ? getDDayString(item.dueDate) : '';
+                          const diffDays = getDiffDaysFromSelected(item.dueDate, this.selectedDateISO);
+                          const isUrgent = diffDays !== 999 && diffDays <= 1;
                           return `
-                            <div class="task-item" data-detail-id="${item.id}" style="cursor: pointer;">
+                            <div class="task-item ${isUrgent ? 'urgent-glow' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
                               <div class="task-checkbox" data-toggle-id="${item.id}"></div>
                               <div class="task-content">
                                 <span class="task-title" style="font-size: 0.92rem;">${this.escapeHtml(item.title)}</span>
@@ -985,7 +996,18 @@ class AppUI {
     document.querySelectorAll('.task-checkbox').forEach(cb => {
       cb.addEventListener('click', (e) => {
         const id = e.currentTarget.getAttribute('data-toggle-id');
+        const item = store.items.find(i => i.id === id);
+        const becomingCompleted = item ? !item.completed : false;
+        
         store.toggleItemComplete(id);
+        
+        if (becomingCompleted && window.confetti) {
+          window.confetti({
+            particleCount: 120,
+            spread: 70,
+            origin: { y: 0.7 }
+          });
+        }
       });
     });
 
@@ -1028,7 +1050,18 @@ class AppUI {
     document.querySelectorAll('[data-toggle-goal-id]').forEach(cb => {
       cb.addEventListener('click', (e) => {
         const id = e.currentTarget.getAttribute('data-toggle-goal-id');
+        const goal = store.goals.find(g => g.id === id);
+        const becomingCompleted = goal ? !goal.completed : false;
+        
         store.toggleGoalComplete(id);
+        
+        if (becomingCompleted && window.confetti) {
+          window.confetti({
+            particleCount: 100,
+            spread: 60,
+            origin: { y: 0.7 }
+          });
+        }
       });
     });
 

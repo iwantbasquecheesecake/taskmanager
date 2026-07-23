@@ -820,3 +820,47 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Logo Gradient Styling */
+.logo-gradient {
+  background: linear-gradient(135deg, var(--accent-forest) 0%, var(--accent-warm-earth) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Wobble shake animation for the brand logo on hover */
+.logo-text {
+  transition: transform 0.2s ease;
+}
+
+.logo-text:hover {
+  animation: wobble-shake 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes wobble-shake {
+  0% { transform: rotate(-2deg) scale(1.02); }
+  100% { transform: rotate(2deg) scale(1.02); }
+}
+
+/* Urgent Task Neon Pulse Glow Animation */
+.task-item.urgent-glow {
+  border-left: 3px solid var(--accent-warm-earth) !important;
+  animation: pulse-border-glow 2s infinite ease-in-out;
+  background: rgba(224, 122, 95, 0.02);
+}
+
+@keyframes pulse-border-glow {
+  0% {
+    box-shadow: 0 0 2px rgba(224, 122, 95, 0.08);
+    border-color: rgba(224, 122, 95, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(224, 122, 95, 0.28);
+    border-color: rgba(224, 122, 95, 0.85);
+  }
+  100% {
+    box-shadow: 0 0 2px rgba(224, 122, 95, 0.08);
+    border-color: rgba(224, 122, 95, 0.35);
+  }
+}
