@@ -807,3 +807,16 @@ body {
 .form-input:focus {
   border-color: var(--accent-forest);
 }
+
+/* Overall Top Layout: Tasks & Goals */
+.overall-top-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .overall-top-layout {
+    grid-template-columns: 1fr;
+  }
+}

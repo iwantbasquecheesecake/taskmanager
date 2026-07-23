@@ -44,6 +44,12 @@ const DEFAULT_ITEMS = [
   }
 ];
 
+// Initial Welcome Sample Goals for First Time Users
+const DEFAULT_GOALS = [
+  { id: 'goal-w1', text: '이번 주 자격증 인강 5개 이상 완강하기 📚', period: 'week', completed: false, createdAt: Date.now() },
+  { id: 'goal-m1', text: '이번 달 정보처리기사 실기 시험 최종 합격 🏆', period: 'month', completed: false, createdAt: Date.now() }
+];
+
 class AppStore {
   constructor() {
     this.listeners = [];
@@ -57,6 +63,7 @@ class AppStore {
         const parsed = JSON.parse(raw);
         this.roles = parsed.roles || DEFAULT_ROLES;
         this.items = parsed.items || DEFAULT_ITEMS;
+        this.goals = parsed.goals || DEFAULT_GOALS;
         this.activeRoleId = parsed.activeRoleId || 'all';
       } catch (e) {
         console.error('Failed to parse local storage:', e);
@@ -70,6 +77,7 @@ class AppStore {
   initDefault() {
     this.roles = [...DEFAULT_ROLES];
     this.items = [...DEFAULT_ITEMS];
+    this.goals = [...DEFAULT_GOALS];
     this.activeRoleId = 'all';
     this.save();
   }
@@ -83,8 +91,14 @@ class AppStore {
     this.save();
   }
 
+  clearAllGoals() {
+    this.goals = [];
+    this.save();
+  }
+
   loadSampleGuide() {
     this.items = [...DEFAULT_ITEMS];
+    this.goals = [...DEFAULT_GOALS];
     this.save();
   }
 
@@ -92,7 +106,8 @@ class AppStore {
     return JSON.stringify({
       roles: this.roles,
       items: this.items,
-      version: '1.0'
+      goals: this.goals,
+      version: '1.1'
     }, null, 2);
   }
 
@@ -102,6 +117,7 @@ class AppStore {
       if (parsed.roles && parsed.items) {
         this.roles = parsed.roles;
         this.items = parsed.items;
+        this.goals = parsed.goals || [];
         this.save();
         return true;
       }
@@ -115,6 +131,7 @@ class AppStore {
     const data = {
       roles: this.roles,
       items: this.items,
+      goals: this.goals,
       activeRoleId: this.activeRoleId
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -239,6 +256,31 @@ class AppStore {
     if (this.activeRoleId === roleId) {
       this.activeRoleId = 'all';
     }
+    this.save();
+  }
+
+  addGoal(text, period) {
+    const newGoal = {
+      id: 'goal-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+      text: text,
+      period: period || 'week',
+      completed: false,
+      createdAt: Date.now()
+    };
+    this.goals.unshift(newGoal);
+    this.save();
+  }
+
+  toggleGoalComplete(id) {
+    const goal = this.goals.find(g => g.id === id);
+    if (goal) {
+      goal.completed = !goal.completed;
+      this.save();
+    }
+  }
+
+  deleteGoal(id) {
+    this.goals = this.goals.filter(g => g.id !== id);
     this.save();
   }
 }

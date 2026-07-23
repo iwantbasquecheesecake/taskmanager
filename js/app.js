@@ -276,80 +276,156 @@ class AppUI {
         ${this.viewMode === 'dashboard' ? `
           ${activeRoleId === 'all' ? `
             <div style="display: flex; flex-direction: column; gap: 16px;">
-              <!-- Overall Tasks Top Section -->
-              <section class="column-card" style="border-top: 3.5px solid var(--accent-warm-earth);">
-                <div class="column-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                  <div class="column-title">
-                    <div class="column-icon icon-dday" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth);">
-                      <i data-lucide="list-todo" style="width: 16px; height: 16px;"></i>
+              <!-- Top Section: Tasks List (Left) & Goals Board (Right) -->
+              <div class="overall-top-layout">
+                
+                <!-- Left Column: Tasks List -->
+                <section class="column-card" style="border-top: 3.5px solid var(--accent-warm-earth);">
+                  <div class="column-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <div class="column-title">
+                      <div class="column-icon icon-dday" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth);">
+                        <i data-lucide="list-todo" style="width: 16px; height: 16px;"></i>
+                      </div>
+                      <div>
+                        <h2 style="font-size: 1.05rem;">태스크</h2>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">카테고리 구분 없이 마감 임박순 정렬</span>
+                      </div>
                     </div>
-                    <div>
-                      <h2 style="font-size: 1.05rem;">태스크</h2>
-                      <span style="font-size: 0.72rem; color: var(--text-muted);">카테고리 구분 없이 마감 임박순 정렬</span>
+                    <span class="item-count" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth);">
+                      ${sortedUpcomingTasks.filter(i => !i.completed).length}개 남음
+                    </span>
+                  </div>
+
+                  <div class="item-list" style="max-height: 320px; overflow-y: auto;">
+                    ${sortedUpcomingTasks.filter(i => !i.completed).length === 0 ? `
+                      <div class="empty-state" style="padding: 20px 10px;">
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">남은 미완료 태스크가 없습니다! 🎉</p>
+                      </div>
+                    ` : sortedUpcomingTasks.filter(i => !i.completed).map(item => {
+                      const role = getRole(roles, item.roleId);
+                      const diffDays = getDiffDaysFromSelected(item.dueDate, this.selectedDateISO);
+                      let ddayText = '';
+                      let badgeBg = 'rgba(45, 90, 39, 0.1)';
+                      let badgeColor = 'var(--accent-forest)';
+
+                      if (diffDays === 999) {
+                        ddayText = '📅 상시';
+                        badgeBg = 'rgba(0, 0, 0, 0.05)';
+                        badgeColor = 'var(--text-muted)';
+                      } else if (diffDays === 0) {
+                        ddayText = '🔥 오늘 마감!';
+                        badgeBg = 'rgba(224, 122, 95, 0.2)';
+                        badgeColor = 'var(--accent-warm-earth)';
+                      } else if (diffDays > 0) {
+                        ddayText = `D-${diffDays} (${formatDate(item.dueDate)})`;
+                        if (diffDays <= 3) {
+                          badgeBg = 'rgba(224, 122, 95, 0.15)';
+                          badgeColor = 'var(--accent-warm-earth)';
+                        }
+                      } else {
+                        ddayText = `D+${Math.abs(diffDays)} (${formatDate(item.dueDate)})`;
+                        badgeBg = 'rgba(0,0,0,0.06)';
+                        badgeColor = 'var(--text-dim)';
+                      }
+
+                      return `
+                        <div class="task-item" data-detail-id="${item.id}" style="cursor: pointer;">
+                          <div class="task-checkbox" data-toggle-id="${item.id}"></div>
+                          <div class="task-content">
+                            <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
+                              <span class="task-title" style="font-size: 0.9rem;">${this.escapeHtml(item.title)}</span>
+                              <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap;">
+                                ${ddayText}
+                              </span>
+                            </div>
+                            <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                              <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; font-size: 0.72rem;">
+                                ${role.name}
+                              </span>
+                              ${item.memo ? '<span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
+                            </div>
+                          </div>
+                          <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
+                            <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                          </button>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </section>
+
+                <!-- Right Column: Goals Board -->
+                <section class="column-card" style="border-top: 3.5px solid var(--accent-sage);">
+                  <div class="column-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <div class="column-title">
+                      <div class="column-icon icon-weekly" style="background: rgba(58, 107, 53, 0.15); color: var(--accent-sage);">
+                        <i data-lucide="target" style="width: 16px; height: 16px;"></i>
+                      </div>
+                      <div>
+                        <h2 style="font-size: 1.05rem;">장기 목표</h2>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">이번 주와 이번 달 주요 목표</span>
+                      </div>
                     </div>
                   </div>
-                  <span class="item-count" style="background: rgba(224, 122, 95, 0.15); color: var(--accent-warm-earth);">
-                    ${sortedUpcomingTasks.filter(i => !i.completed).length}개 남음
-                  </span>
-                </div>
 
-                <div class="item-list" style="max-height: 280px; overflow-y: auto;">
-                  ${sortedUpcomingTasks.filter(i => !i.completed).length === 0 ? `
-                    <div class="empty-state" style="padding: 20px 10px;">
-                      <p style="font-size: 0.85rem; color: var(--text-muted);">남은 미완료 태스크가 없습니다! 🎉</p>
-                    </div>
-                  ` : sortedUpcomingTasks.filter(i => !i.completed).map(item => {
-                    const role = getRole(roles, item.roleId);
-                    const diffDays = getDiffDaysFromSelected(item.dueDate, this.selectedDateISO);
-                    let ddayText = '';
-                    let badgeBg = 'rgba(45, 90, 39, 0.1)';
-                    let badgeColor = 'var(--accent-forest)';
-
-                    if (diffDays === 999) {
-                      ddayText = '📅 상시';
-                      badgeBg = 'rgba(0, 0, 0, 0.05)';
-                      badgeColor = 'var(--text-muted)';
-                    } else if (diffDays === 0) {
-                      ddayText = '🔥 오늘 마감!';
-                      badgeBg = 'rgba(224, 122, 95, 0.2)';
-                      badgeColor = 'var(--accent-warm-earth)';
-                    } else if (diffDays > 0) {
-                      ddayText = `D-${diffDays} (${formatDate(item.dueDate)})`;
-                      if (diffDays <= 3) {
-                        badgeBg = 'rgba(224, 122, 95, 0.15)';
-                        badgeColor = 'var(--accent-warm-earth)';
-                      }
-                    } else {
-                      ddayText = `D+${Math.abs(diffDays)} (${formatDate(item.dueDate)})`;
-                      badgeBg = 'rgba(0,0,0,0.06)';
-                      badgeColor = 'var(--text-dim)';
-                    }
-
-                    return `
-                      <div class="task-item" data-detail-id="${item.id}" style="cursor: pointer;">
-                        <div class="task-checkbox" data-toggle-id="${item.id}"></div>
-                        <div class="task-content">
-                          <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
-                            <span class="task-title" style="font-size: 0.9rem;">${this.escapeHtml(item.title)}</span>
-                            <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; white-space: nowrap;">
-                              ${ddayText}
-                            </span>
+                  <div style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; max-height: 320px;">
+                    <!-- Weekly Goals Section -->
+                    <div>
+                      <h3 style="font-size: 0.85rem; font-weight: 700; color: var(--accent-sage); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>💡 이번 주 목표</span>
+                        <span style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted);">${state.goals ? state.goals.filter(g => g.period === 'week' && !g.completed).length : 0}개 남음</span>
+                      </h3>
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        ${(state.goals || []).filter(g => g.period === 'week').length === 0 ? `
+                          <p style="font-size: 0.8rem; color: var(--text-dim); text-align: center; padding: 6px 0;">이번 주 목표가 비어있습니다.</p>
+                        ` : (state.goals || []).filter(g => g.period === 'week').map(goal => `
+                          <div class="task-item ${goal.completed ? 'completed' : ''}" style="padding: 6px 8px; font-size: 0.85rem;">
+                            <div class="task-checkbox ${goal.completed ? 'checked' : ''}" data-toggle-goal-id="${goal.id}" style="width: 15px; height: 15px; border-radius: 4px;">
+                              ${goal.completed ? '<i data-lucide="check" style="width: 10px; height: 10px;"></i>' : ''}
+                            </div>
+                            <span class="task-title" style="flex: 1; font-size: 0.82rem;">${this.escapeHtml(goal.text)}</span>
+                            <button class="btn-action-delete btn-delete-goal" data-delete-goal-id="${goal.id}" title="삭제" style="padding: 2px; opacity: 1;">
+                              <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+                            </button>
                           </div>
-                          <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
-                            <span class="role-tag" style="background: ${role.color}15; color: ${role.color}; font-size: 0.72rem;">
-                              ${role.name}
-                            </span>
-                            ${item.memo ? '<span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 1px 5px; border-radius: 4px;">📝 메모</span>' : ''}
-                          </div>
-                        </div>
-                        <button class="btn-action-delete" data-delete-id="${item.id}" title="삭제">
-                          <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
-                        </button>
+                        `).join('')}
                       </div>
-                    `;
-                  }).join('')}
-                </div>
-              </section>
+                      <form id="form-add-weekly-goal" style="display: flex; gap: 6px; margin-top: 8px;">
+                        <input type="text" id="input-weekly-goal" placeholder="이번 주 목표 추가..." required style="flex: 1; font-size: 0.78rem; padding: 5px 8px; border: 1px dashed var(--border-color); border-radius: 6px; outline: none; background: transparent;" />
+                        <button type="submit" class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px;">추가</button>
+                      </form>
+                    </div>
+
+                    <!-- Monthly Goals Section -->
+                    <div style="border-top: 1px dashed var(--border-color); padding-top: 12px;">
+                      <h3 style="font-size: 0.85rem; font-weight: 700; color: var(--accent-forest); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>📅 이번 달 목표</span>
+                        <span style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted);">${state.goals ? state.goals.filter(g => g.period === 'month' && !g.completed).length : 0}개 남음</span>
+                      </h3>
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        ${(state.goals || []).filter(g => g.period === 'month').length === 0 ? `
+                          <p style="font-size: 0.8rem; color: var(--text-dim); text-align: center; padding: 6px 0;">이번 달 목표가 비어있습니다.</p>
+                        ` : (state.goals || []).filter(g => g.period === 'month').map(goal => `
+                          <div class="task-item ${goal.completed ? 'completed' : ''}" style="padding: 6px 8px; font-size: 0.85rem;">
+                            <div class="task-checkbox ${goal.completed ? 'checked' : ''}" data-toggle-goal-id="${goal.id}" style="width: 15px; height: 15px; border-radius: 4px;">
+                              ${goal.completed ? '<i data-lucide="check" style="width: 10px; height: 10px;"></i>' : ''}
+                            </div>
+                            <span class="task-title" style="flex: 1; font-size: 0.82rem;">${this.escapeHtml(goal.text)}</span>
+                            <button class="btn-action-delete btn-delete-goal" data-delete-goal-id="${goal.id}" title="삭제" style="padding: 2px; opacity: 1;">
+                              <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+                            </button>
+                          </div>
+                        `).join('')}
+                      </div>
+                      <form id="form-add-monthly-goal" style="display: flex; gap: 6px; margin-top: 8px;">
+                        <input type="text" id="input-monthly-goal" placeholder="이번 달 목표 추가..." required style="flex: 1; font-size: 0.78rem; padding: 5px 8px; border: 1px dashed var(--border-color); border-radius: 6px; outline: none; background: transparent;" />
+                        <button type="submit" class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px;">추가</button>
+                      </form>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
 
               <!-- Overall View: Grid of All Categories -->
               <main class="dashboard-grid">
@@ -916,6 +992,50 @@ class AppUI {
         const id = e.currentTarget.getAttribute('data-delete-id');
         if (confirm('이 항목을 삭제하시겠습니까?')) {
           store.deleteItem(id);
+        }
+      });
+    });
+
+    // 🎯 Goals Event Handlers
+    const formWeeklyGoal = document.getElementById('form-add-weekly-goal');
+    if (formWeeklyGoal) {
+      formWeeklyGoal.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('input-weekly-goal');
+        const text = input.value.trim();
+        if (text) {
+          store.addGoal(text, 'week');
+          input.value = '';
+        }
+      });
+    }
+
+    const formMonthlyGoal = document.getElementById('form-add-monthly-goal');
+    if (formMonthlyGoal) {
+      formMonthlyGoal.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('input-monthly-goal');
+        const text = input.value.trim();
+        if (text) {
+          store.addGoal(text, 'month');
+          input.value = '';
+        }
+      });
+    }
+
+    document.querySelectorAll('[data-toggle-goal-id]').forEach(cb => {
+      cb.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-toggle-goal-id');
+        store.toggleGoalComplete(id);
+      });
+    });
+
+    document.querySelectorAll('.btn-delete-goal[data-delete-goal-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.getAttribute('data-delete-goal-id');
+        if (confirm('이 목표를 삭제하시겠습니까?')) {
+          store.deleteGoal(id);
         }
       });
     });
