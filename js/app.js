@@ -695,11 +695,13 @@ class AppUI {
 
       <!-- Settings Modal -->
       <div class="modal-overlay ${this.isRoleModalOpen ? 'open' : ''}" id="role-modal">
-        <div class="modal-card" style="max-width: 500px; padding: 26px; gap: 20px; max-height: 90vh; overflow-y: auto;">
-          <div class="modal-header" style="padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">
-            <h3 style="font-size: 1.2rem;">설정 & 커스텀 관리</h3>
-            <button class="btn-close" id="btn-close-modal">✕</button>
+        <div class="modal-card" style="max-width: 500px; padding: 26px; display: flex; flex-direction: column; gap: 16px; max-height: 90vh; overflow: hidden;">
+          <div class="modal-header" style="padding-bottom: 8px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.2rem; margin: 0;">설정 & 커스텀 관리</h3>
+            <button class="btn-close" id="btn-close-modal" style="margin: 0;">✕</button>
           </div>
+          
+          <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding-right: 4px;">
 
           <form id="form-add-role" class="form-group" style="gap: 8px;">
             <label style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">1. 나만의 역할(Role) 추가하기</label>
