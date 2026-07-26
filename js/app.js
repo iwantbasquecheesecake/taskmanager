@@ -466,7 +466,7 @@ class AppUI {
                           const diffDays = getDiffDaysFromSelected(item.dueDate, this.selectedDateISO);
                           const isUrgent = !item.completed && diffDays !== 999 && diffDays <= 1;
                           return `
-                            <div class="task-item ${item.completed ? 'completed' : ''} ${isUrgent ? 'urgent-glow' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
+                            <div class="task-item ${item.completed ? 'completed' : ''} ${isUrgent ? 'urgent-glow' : ''}" data-detail-id="${item.id}" draggable="true" data-draggable-id="${item.id}" style="cursor: pointer;">
                               <div class="task-checkbox ${item.completed ? 'checked' : ''}" data-toggle-id="${item.id}">
                                 ${item.completed ? '<i data-lucide="check" style="width: 13px; height: 13px;"></i>' : ''}
                               </div>
@@ -542,7 +542,7 @@ class AppUI {
                           const diffDays = getDiffDaysFromSelected(item.dueDate, this.selectedDateISO);
                           const isUrgent = diffDays !== 999 && diffDays <= 1;
                           return `
-                            <div class="task-item ${isUrgent ? 'urgent-glow' : ''}" data-detail-id="${item.id}" style="cursor: pointer;">
+                            <div class="task-item ${isUrgent ? 'urgent-glow' : ''}" data-detail-id="${item.id}" draggable="true" data-draggable-id="${item.id}" style="cursor: pointer;">
                               <div class="task-checkbox" data-toggle-id="${item.id}"></div>
                               <div class="task-content">
                                 <span class="task-title" style="font-size: 0.92rem;">${this.escapeHtml(item.title)}</span>
@@ -1209,6 +1209,58 @@ class AppUI {
         input.click();
       });
     }
+
+    // 🔀 Drag and Drop Task Reordering Event Listeners
+    let draggedId = null;
+
+    document.querySelectorAll('[data-draggable-id]').forEach(el => {
+      el.addEventListener('dragstart', (e) => {
+        draggedId = e.currentTarget.getAttribute('data-draggable-id');
+        e.dataTransfer.setData('text/plain', draggedId);
+        e.currentTarget.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      el.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const targetId = el.getAttribute('data-draggable-id');
+        if (draggedId && draggedId !== targetId) {
+          const rect = el.getBoundingClientRect();
+          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+          if (next) {
+            el.style.borderBottom = '2px solid var(--accent-forest)';
+            el.style.borderTop = '';
+          } else {
+            el.style.borderTop = '2px solid var(--accent-forest)';
+            el.style.borderBottom = '';
+          }
+        }
+      });
+
+      el.addEventListener('dragleave', (e) => {
+        el.style.borderTop = '';
+        el.style.borderBottom = '';
+      });
+
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        el.style.borderTop = '';
+        el.style.borderBottom = '';
+        const targetId = el.getAttribute('data-draggable-id');
+        if (draggedId && targetId && draggedId !== targetId) {
+          store.reorderItem(draggedId, targetId);
+        }
+      });
+
+      el.addEventListener('dragend', (e) => {
+        e.currentTarget.classList.remove('dragging');
+        draggedId = null;
+        document.querySelectorAll('[data-draggable-id]').forEach(item => {
+          item.style.borderTop = '';
+          item.style.borderBottom = '';
+        });
+      });
+    });
   }
 }
 

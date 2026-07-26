@@ -864,3 +864,20 @@ body {
     border-color: rgba(224, 122, 95, 0.35);
   }
 }
+
+/* Drag and Drop Styling */
+.task-item[draggable="true"] {
+  cursor: grab;
+  transition: transform 0.15s ease, border-top 0.15s ease, border-bottom 0.15s ease, opacity 0.15s ease;
+}
+
+.task-item[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.task-item.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+  border: 1px dashed var(--border-color);
+  background: var(--bg-secondary) !important;
+}

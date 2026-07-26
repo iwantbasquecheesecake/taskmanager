@@ -283,6 +283,19 @@ class AppStore {
     this.goals = this.goals.filter(g => g.id !== id);
     this.save();
   }
+
+  reorderItem(draggedId, targetId) {
+    const draggedIdx = this.items.findIndex(i => i.id === draggedId);
+    const targetIdx = this.items.findIndex(i => i.id === targetId);
+    
+    if (draggedIdx === -1 || targetIdx === -1) return;
+    if (this.items[draggedIdx].roleId !== this.items[targetIdx].roleId) return;
+
+    const [draggedItem] = this.items.splice(draggedIdx, 1);
+    const newTargetIdx = this.items.findIndex(i => i.id === targetId);
+    this.items.splice(newTargetIdx, 0, draggedItem);
+    this.save();
+  }
 }
 
 export const store = new AppStore();
