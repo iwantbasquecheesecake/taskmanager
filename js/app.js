@@ -823,7 +823,7 @@ class AppUI {
                 </div>
 
                 <div>
-                  <label style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 0.85rem;">📝 상세 메모 & 메모장</label>
+                  <label style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 0.85rem;">📝 메모장</label>
                   <textarea id="detail-memo-input" class="form-input" rows="4" placeholder="자세한 정보, 메모, 챙길 것 등을 입력해두세요..." style="width: 100%; resize: vertical; font-family: inherit; font-size: 0.88rem; line-height: 1.5;">${this.escapeHtml(activeItem.memo || '')}</textarea>
                 </div>
 
