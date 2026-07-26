@@ -1248,7 +1248,9 @@ class AppUI {
         el.style.borderBottom = '';
         const targetId = el.getAttribute('data-draggable-id');
         if (draggedId && targetId && draggedId !== targetId) {
-          store.reorderItem(draggedId, targetId);
+          const rect = el.getBoundingClientRect();
+          const isAfter = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+          store.reorderItem(draggedId, targetId, isAfter);
         }
       });
 

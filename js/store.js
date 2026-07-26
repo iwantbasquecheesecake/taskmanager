@@ -284,7 +284,7 @@ class AppStore {
     this.save();
   }
 
-  reorderItem(draggedId, targetId) {
+  reorderItem(draggedId, targetId, isAfter) {
     const draggedIdx = this.items.findIndex(i => i.id === draggedId);
     const targetIdx = this.items.findIndex(i => i.id === targetId);
     
@@ -292,7 +292,12 @@ class AppStore {
     if (this.items[draggedIdx].roleId !== this.items[targetIdx].roleId) return;
 
     const [draggedItem] = this.items.splice(draggedIdx, 1);
-    const newTargetIdx = this.items.findIndex(i => i.id === targetId);
+    let newTargetIdx = this.items.findIndex(i => i.id === targetId);
+    
+    if (isAfter) {
+      newTargetIdx += 1;
+    }
+    
     this.items.splice(newTargetIdx, 0, draggedItem);
     this.save();
   }
